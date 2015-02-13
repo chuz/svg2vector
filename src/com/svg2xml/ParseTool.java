@@ -15,6 +15,8 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 public class ParseTool {
+    boolean DBG = false;
+
     SAXParserFactory mSAXParserFactory;
     SAXParser mSAXParser;
     ParseHandler mParseHandler;
@@ -69,6 +71,7 @@ public class ParseTool {
             return;
         }
         try {
+            if(DBG) System.out.println("=================");
             mSAXParser.reset();
             mParseHandler.setFileName(fileName);
             mSAXParser.parse(fileName, mParseHandler);
@@ -79,6 +82,11 @@ public class ParseTool {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    public void setDBG(boolean dBG) {
+        DBG = dBG;
+        mParseHandler.setDBG(DBG);
     }
 }
 
@@ -120,6 +128,8 @@ class ParseHandler extends DefaultHandler {
     public static final String TAG_VECTOR_PATH_STROKELINEJOIN = "android:strokeLineJoin";
     public static final String TAG_VECTOR_PATH_STROKELINECAP = "android:strokeLineCap";
 
+    boolean DBG = false;
+
     StringBuilder mContent = new StringBuilder();
     String mFileName;
     float mDpiScale = 1.0f;
@@ -134,34 +144,40 @@ class ParseHandler extends DefaultHandler {
 
     }
 
+    public void setDBG(boolean dBG) {
+        DBG = dBG;
+    }
+
     public void setFileName(String fileName) {
         mFileName = fileName;
         mDpiScale = MainLoader.mDpiScale;
         if (mContent.length() > 0) {
-            mContent.delete(0, mContent.length() - 1);
+            mContent.delete(0, mContent.length());
         }
     }
 
     @Override
     public void startDocument() throws SAXException {
-        System.out.println("start parse file： " + mFileName);
+        if(DBG) System.out.println("start parsing file:" + mFileName);
     }
 
     @Override
     public void endDocument() throws SAXException {
-        System.out.println("file： " + mFileName + " parse finish.");
+        if(DBG) System.out.println("finish parsing file:" + mFileName);
         generateVectorDrawable(mContent.toString(), mFileName);
     }
 
     @Override
     public void startElement(String uri, String localName, String qName,
             Attributes attributes) throws SAXException {
-        System.out.println("get element " + qName);
-        System.out.println("    attributes:");
+        if(DBG) System.out.println("catch element:" + qName);
+        if(DBG) System.out.println("    attributes:");
         mElementCount++;
         for (int l = 0; l < attributes.getLength(); l++) {
-            System.out.println("    " + attributes.getQName(l) + "=\""
-                    + attributes.getValue(l) + "\"");
+            if(DBG) {
+                System.out.println("    " + attributes.getQName(l) + "=\""
+                        + attributes.getValue(l) + "\"");
+            }
         }
 
         if (qName.equals(TAG_SVG_HEAD)) {
@@ -180,7 +196,7 @@ class ParseHandler extends DefaultHandler {
     @Override
     public void endElement(String uri, String localName, String qName)
             throws SAXException {
-        System.out.println("finish element " + qName);
+        if(DBG) System.out.println("release element:" + qName);
         if (qName.equals(TAG_SVG_HEAD)) {
             mContent.append("</" + TAG_VECTOR_HEAD + ">");
         } else if (qName.equals(TAG_SVG_GROUNP)) {
@@ -340,7 +356,7 @@ class ParseHandler extends DefaultHandler {
         boolean getFillAlphaAttri = false, getStrokeAlphaAttri = false;
         float fillAlphaValue = 0f, strokeAlphaValue = 0f;
         for (int s = 0; s < subattri.length; s++) {
-            System.out.println("        " + subattri[s]);
+            if(DBG) System.out.println("        " + subattri[s]);
             if (subattri[s].contains(TAG_SVG_PATH_OPACITY)) {
                 if (getStyleSubAttriValue(subattri[s]).equals("null")) {
                     fillAlphaValue = 1.0f;
@@ -427,6 +443,8 @@ class ParseHandler extends DefaultHandler {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        System.out.println("generateVectorDrawable: "
+                + vectorFile.getAbsoluteFile());
     }
 
     void contentAppendWithSpace(String xml) {
