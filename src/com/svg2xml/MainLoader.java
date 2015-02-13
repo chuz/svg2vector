@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class MainLoader {
     ParseTool mParseTool;
     public static final String SVG_SUFFIX = ".svg";
-    public static final String[] DPIs = { "mhdpi", "hdpi", "xhdpi", "xxhdpi",
+    public static final String[] DPIs = { "mdpi", "hdpi", "xhdpi", "xxhdpi",
             "xxxhdpi" };
     public static final float[] DPI_SCALEs = { 1.0f, 1.5f, 2.0f, 3.0f, 4.0f };
     public static float mDpiScale = 1.0f;
