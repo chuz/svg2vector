@@ -18,6 +18,7 @@ public class ParseTool {
     SAXParserFactory mSAXParserFactory;
     SAXParser mSAXParser;
     ParseHandler mParseHandler;
+    static String SAVE_DIR = "vector";
 
     public ParseTool() {
         // TODO Auto-generated constructor stub
@@ -52,9 +53,16 @@ public class ParseTool {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
+        File vectorSaveDir = new File(SAVE_DIR);
+        if (vectorSaveDir.exists() && vectorSaveDir.isFile()) {
+            vectorSaveDir.delete();
+        }
+        if (!vectorSaveDir.exists()) {
+            vectorSaveDir.mkdir();
+        }
     }
 
-    @SuppressWarnings("resource")
     public void parseFile(String fileName) {
         if (mSAXParser == null) {
             System.out.println("mSAXParser == null");
@@ -114,9 +122,16 @@ class ParseHandler extends DefaultHandler {
 
     StringBuilder mContent = new StringBuilder();
     String mFileName;
+    float mDpiScale = 1.0f;
+
+    public ParseHandler() {
+        // TODO Auto-generated constructor stub
+
+    }
 
     public void setFileName(String fileName) {
         mFileName = fileName;
+        mDpiScale = MainLoader.mDpiScale;
         if (mContent.length() > 0) {
             mContent.delete(0, mContent.length() - 1);
         }
@@ -137,7 +152,7 @@ class ParseHandler extends DefaultHandler {
     public void startElement(String uri, String localName, String qName,
             Attributes attributes) throws SAXException {
         System.out.println("get element " + qName);
-        System.out.println("    attributes");
+        System.out.println("    attributes:");
         for (int l = 0; l < attributes.getLength(); l++) {
             System.out.println("    " + attributes.getQName(l) + "=\""
                     + attributes.getValue(l) + "\"");
@@ -175,16 +190,34 @@ class ParseHandler extends DefaultHandler {
         mContent.append("\n");
         // 获取高宽
         String ws = attributes.getValue(TAG_SVG_WIDTH);
-        int w = Integer.valueOf(ws.substring(0, ws.length() - 3));
+        int w = 0;
+        try {
+            w = Integer.valueOf(ws.substring(0, ws.length() - 2));
+        } catch (Exception e) {
+            // TODO: handle exception
+            w = Integer.valueOf(ws);
+        }
         String hs = attributes.getValue(TAG_SVG_HEIGHT);
-        int h = Integer.valueOf(hs.substring(0, ws.length() - 3));
-        // 获取viewPort尺寸
-        String[] viewbox = attributes.getValue(TAG_SVG_VIEWBOX).split(" ");
-        int vw = Integer.valueOf(viewbox[2]);
-        int vh = Integer.valueOf(viewbox[3]);
-        mContent.append("    " + TAG_VECTOR_WIDTH + "=\"" + w + "dp\"");
+        int h = 0;
+        try {
+            h = Integer.valueOf(hs.substring(0, hs.length() - 2));
+        } catch (Exception e) {
+            // TODO: handle exception
+            h = Integer.valueOf(hs);
+        }
+        // 获取viewPort尺寸，没有则默认使用高宽
+        int vw = 0, vh = 0;
+        if (attributes.getValue(TAG_SVG_VIEWBOX) != null) {
+            String[] viewbox = attributes.getValue(TAG_SVG_VIEWBOX).split(" ");
+            vw = Integer.valueOf(viewbox[2]);
+            vh = Integer.valueOf(viewbox[3]);
+        } else {
+            vw = w;
+            vh = h;
+        }
+        mContent.append("    " + TAG_VECTOR_WIDTH + "=\"" + (int)(w / mDpiScale) + "dp\"");
         mContent.append("\n");
-        mContent.append("    " + TAG_VECTOR_HEIGHT + "=\"" + h + "dp\"");
+        mContent.append("    " + TAG_VECTOR_HEIGHT + "=\"" + (int)(h / mDpiScale) + "dp\"");
         mContent.append("\n");
         mContent.append("    " + TAG_VECTOR_VIEWPORTWIDTH + "=\"" + vw + "\"");
         mContent.append("\n");
@@ -200,59 +233,145 @@ class ParseHandler extends DefaultHandler {
         // 获取path的style属性
         String style = attributes.getValue(TAG_SVG_PATHSTYLE);
         if (style == null) {
-            mContent.append(TAG_VECTOR_PATH_FILLCOLOR + "=\"#000000\" ");
-            mContent.append("\n");
+            handleSimpleAttriValueInPath(attributes, mContent);
         } else {
-            String[] subattri = style.split(";");
-            for (int s = 0; s < subattri.length; s++) {
-                System.out.println(subattri[s]);
-                if (subattri[s].contains(TAG_SVG_PATH_OPACITY)) {
-                    mContent.append(TAG_VECTOR_PATH_FILLALPHA + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                    mContent.append(TAG_VECTOR_PATH_STROKEALPHA + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                } else if (subattri[s].contains(TAG_SVG_PATH_FILLCOLOR)) {
-                    mContent.append(TAG_VECTOR_PATH_FILLCOLOR + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                } else if (subattri[s].contains(TAG_SVG_PATH_FILLALPHA)) {
-                    mContent.append(TAG_VECTOR_PATH_FILLALPHA + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                } else if (subattri[s].contains(TAG_SVG_PATH_STROKECOLOR)) {
-                    mContent.append(TAG_VECTOR_PATH_STROKECOLOR + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                } else if (subattri[s].contains(TAG_SVG_PATH_STROKEALPHA)) {
-                    mContent.append(TAG_VECTOR_PATH_STROKEALPHA + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                } else if (subattri[s].contains(TAG_SVG_PATH_STROKEWIDTH)) {
-                    mContent.append(TAG_VECTOR_PATH_STROKEWIDTH + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                } else if (subattri[s].contains(TAG_SVG_PATH_STROKEMITERLIMIT)) {
-                    mContent.append(TAG_VECTOR_PATH_STROKEMITERLIMIT + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                } else if (subattri[s].contains(TAG_SVG_PATH_STROKELINEJOIN)) {
-                    mContent.append(TAG_VECTOR_PATH_STROKELINEJOIN + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                } else if (subattri[s].contains(TAG_SVG_PATH_STROKELINECAP)) {
-                    mContent.append(TAG_VECTOR_PATH_STROKELINECAP + "=\""
-                            + getStyleSubAttriValue(subattri[s]) + "\" ");
-                    mContent.append("\n");
-                }
-            }
+            handleStyleSubAttriValue(style, mContent);
         }
         // 获取pathData
         mContent.append(TAG_VECTOR_PATHDATA + "=\""
                 + attributes.getValue(TAG_SVG_PATHDATA) + "\"");
         mContent.append("\n");
         mContent.append(">\n");
+    }
+
+    /**
+     * 处理path里面除pathdata之外的属性
+     * @param attributes
+     * @param content
+     */
+    void handleSimpleAttriValueInPath(Attributes attributes, StringBuilder content) {
+        boolean getFillAlphaAttri = false, getStrokeAlphaAttri = false;
+        float fillAlphaValue = 0f, strokeAlphaValue = 0f;
+        for (int index = 0; index < attributes.getLength(); index++) {
+            if (attributes.getQName(index).equals(TAG_SVG_PATH_OPACITY)) {
+                fillAlphaValue = Float.valueOf(attributes.getValue(index));
+                strokeAlphaValue = fillAlphaValue;
+                getFillAlphaAttri = true;
+                getStrokeAlphaAttri = true;
+            } else if (attributes.getQName(index).equals(TAG_SVG_PATH_FILLCOLOR)) {
+                content.append(TAG_VECTOR_PATH_FILLCOLOR + "=\""
+                        + getStyleSubAttriValue(attributes.getValue(index)) + "\" ");
+                content.append("\n");
+            } else if (attributes.getQName(index).equals(TAG_SVG_PATH_FILLALPHA)) {
+                getFillAlphaAttri = true;
+                fillAlphaValue = Float.valueOf(attributes.getValue(index));
+            } else if (attributes.getQName(index).equals(TAG_SVG_PATH_STROKECOLOR)) {
+                content.append(TAG_VECTOR_PATH_STROKECOLOR + "=\""
+                        + getStyleSubAttriValue(attributes.getValue(index)) + "\" ");
+                content.append("\n");
+            } else if (attributes.getQName(index).equals(TAG_SVG_PATH_STROKEALPHA)) {
+                getStrokeAlphaAttri = true;
+                strokeAlphaValue = Float.valueOf(attributes.getValue(index));
+            } else if (attributes.getQName(index).equals(TAG_SVG_PATH_STROKEWIDTH)) {
+                content.append(TAG_VECTOR_PATH_STROKEWIDTH + "=\""
+                        + getStyleSubAttriValue(attributes.getValue(index)) + "\" ");
+                content.append("\n");
+            } else if (attributes.getQName(index).equals(TAG_SVG_PATH_STROKEMITERLIMIT)) {
+                content.append(TAG_VECTOR_PATH_STROKEMITERLIMIT + "=\""
+                        + getStyleSubAttriValue(attributes.getValue(index)) + "\" ");
+                content.append("\n");
+            } else if (attributes.getQName(index).equals(TAG_SVG_PATH_STROKELINEJOIN)) {
+                content.append(TAG_VECTOR_PATH_STROKELINEJOIN + "=\""
+                        + getStyleSubAttriValue(attributes.getValue(index)) + "\" ");
+                content.append("\n");
+            } else if (attributes.getQName(index).equals(TAG_SVG_PATH_STROKELINECAP)) {
+                content.append(TAG_VECTOR_PATH_STROKELINECAP + "=\""
+                        + getStyleSubAttriValue(attributes.getValue(index)) + "\" ");
+                content.append("\n");
+            }
+        }
+        if (getFillAlphaAttri) {
+            content.append(TAG_VECTOR_PATH_FILLALPHA + "=\"" + fillAlphaValue
+                    + "\" ");
+            content.append("\n");
+        }
+        if (getStrokeAlphaAttri) {
+            content.append(TAG_VECTOR_PATH_FILLALPHA + "=\"" + strokeAlphaValue
+                    + "\" ");
+            content.append("\n");
+        }
+    }
+
+    /**
+     * 处理path里面出现style的情况
+     * @param style
+     * @param content
+     */
+    void handleStyleSubAttriValue(String style, StringBuilder content) {
+        String[] subattri = style.split(";");
+        boolean getFillAlphaAttri = false, getStrokeAlphaAttri = false;
+        float fillAlphaValue = 0f, strokeAlphaValue = 0f;
+        for (int s = 0; s < subattri.length; s++) {
+            System.out.println(subattri[s]);
+            if (subattri[s].contains(TAG_SVG_PATH_OPACITY)) {
+                fillAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
+                strokeAlphaValue = fillAlphaValue;
+                getFillAlphaAttri = true;
+                getStrokeAlphaAttri = true;
+//                content.append(TAG_VECTOR_PATH_FILLALPHA + "=\""
+//                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+//                content.append("\n");
+//                content.append(TAG_VECTOR_PATH_STROKEALPHA + "=\""
+//                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+//                content.append("\n");
+            } else if (subattri[s].contains(TAG_SVG_PATH_FILLCOLOR)) {
+                content.append(TAG_VECTOR_PATH_FILLCOLOR + "=\""
+                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+                content.append("\n");
+            } else if (subattri[s].contains(TAG_SVG_PATH_FILLALPHA)) {
+                getFillAlphaAttri = true;
+                fillAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
+//                content.append(TAG_VECTOR_PATH_FILLALPHA + "=\""
+//                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+//                content.append("\n");
+            } else if (subattri[s].contains(TAG_SVG_PATH_STROKECOLOR)) {
+                content.append(TAG_VECTOR_PATH_STROKECOLOR + "=\""
+                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+                content.append("\n");
+            } else if (subattri[s].contains(TAG_SVG_PATH_STROKEALPHA)) {
+                getStrokeAlphaAttri = true;
+                strokeAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
+//                content.append(TAG_VECTOR_PATH_STROKEALPHA + "=\""
+//                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+//                content.append("\n");
+            } else if (subattri[s].contains(TAG_SVG_PATH_STROKEWIDTH)) {
+                content.append(TAG_VECTOR_PATH_STROKEWIDTH + "=\""
+                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+                content.append("\n");
+            } else if (subattri[s].contains(TAG_SVG_PATH_STROKEMITERLIMIT)) {
+                content.append(TAG_VECTOR_PATH_STROKEMITERLIMIT + "=\""
+                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+                content.append("\n");
+            } else if (subattri[s].contains(TAG_SVG_PATH_STROKELINEJOIN)) {
+                content.append(TAG_VECTOR_PATH_STROKELINEJOIN + "=\""
+                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+                content.append("\n");
+            } else if (subattri[s].contains(TAG_SVG_PATH_STROKELINECAP)) {
+                content.append(TAG_VECTOR_PATH_STROKELINECAP + "=\""
+                        + getStyleSubAttriValue(subattri[s]) + "\" ");
+                content.append("\n");
+            }
+        }
+        if (getFillAlphaAttri) {
+            content.append(TAG_VECTOR_PATH_FILLALPHA + "=\"" + fillAlphaValue
+                    + "\" ");
+            content.append("\n");
+        }
+        if (getStrokeAlphaAttri) {
+            content.append(TAG_VECTOR_PATH_FILLALPHA + "=\"" + strokeAlphaValue
+                    + "\" ");
+            content.append("\n");
+        }
     }
 
     String getStyleSubAttriValue(String subattri) {
@@ -267,7 +386,7 @@ class ParseHandler extends DefaultHandler {
     @SuppressWarnings("resource")
     public void generateVectorDrawable(String xml, String fileName) {
         String storePath = extractFileNameWithoutExt(fileName) + ".xml";
-        File vectorFile = new File(storePath);
+        File vectorFile = new File(ParseTool.SAVE_DIR + "/" + storePath);
         if (vectorFile.exists()) {
             vectorFile.delete();
         }
