@@ -404,7 +404,7 @@ class ParseHandler extends DefaultHandler {
         float fillAlphaValue = 0f, strokeAlphaValue = 0f;
         for (int s = 0; s < subattri.length; s++) {
             if(DBG) System.out.println("        " + subattri[s]);
-            if (subattri[s].contains(TAG_SVG_PATH_OPACITY)) {
+            if (subattri[s].contains(TAG_SVG_PATH_OPACITY+":")) {
                 if (getStyleSubAttriValue(subattri[s]).equals("null")) {
                     fillAlphaValue = 1.0f;
                 } else {
@@ -413,7 +413,7 @@ class ParseHandler extends DefaultHandler {
                 strokeAlphaValue = fillAlphaValue;
                 getFillAlphaAttri = true;
                 getStrokeAlphaAttri = true;
-            } else if (subattri[s].contains(TAG_SVG_PATH_FILLCOLOR)) {
+            } else if (subattri[s].contains(TAG_SVG_PATH_FILLCOLOR+":")) {
                 contentAppendWithSpace(TAG_VECTOR_PATH_FILLCOLOR + "=\""
                         + getStyleSubAttriValue(subattri[s]) + "\" ");
                 contentAppendWithSpace(0,"\n");
@@ -424,7 +424,7 @@ class ParseHandler extends DefaultHandler {
                 } else {
                     fillAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
                 }
-            } else if (subattri[s].contains(TAG_SVG_PATH_STROKECOLOR)) {
+            } else if (subattri[s].contains(TAG_SVG_PATH_STROKECOLOR+":")) {
                 contentAppendWithSpace(TAG_VECTOR_PATH_STROKECOLOR + "=\""
                         + getStyleSubAttriValue(subattri[s]) + "\" ");
                 contentAppendWithSpace(0,"\n");
