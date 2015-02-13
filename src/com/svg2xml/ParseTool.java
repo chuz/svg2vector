@@ -124,6 +124,8 @@ class ParseHandler extends DefaultHandler {
     String mFileName;
     float mDpiScale = 1.0f;
 
+    int mEmptyGroupCount = 0;
+
     public ParseHandler() {
         // TODO Auto-generated constructor stub
 
@@ -161,9 +163,11 @@ class ParseHandler extends DefaultHandler {
         if (qName.equals(TAG_SVG_HEAD)) {
             generateVectorHead(attributes);
         } else if (qName.equals(TAG_SVG_GROUNP)) {
+            mEmptyGroupCount++;
             mContent.append("<" + TAG_VECTOR_GROUNP + ">");
-            mContent.append("\n");
+            mContent.append("\n"); 
         } else if (qName.equals(TAG_SVG_PATH)) {
+            mEmptyGroupCount = 0;
             generateVectorPath(attributes);
         }
     }
@@ -175,8 +179,13 @@ class ParseHandler extends DefaultHandler {
         if (qName.equals(TAG_SVG_HEAD)) {
             mContent.append("</" + TAG_VECTOR_HEAD + ">");
         } else if (qName.equals(TAG_SVG_GROUNP)) {
-            mContent.append("</" + TAG_VECTOR_GROUNP + ">");
-            mContent.append("\n");
+            if (mEmptyGroupCount > 0) {
+                mEmptyGroupCount--;
+                mContent.delete(mContent.length() - 2 - TAG_VECTOR_GROUNP.length() - 1, mContent.length());
+            } else {
+                mContent.append("</" + TAG_VECTOR_GROUNP + ">");
+                mContent.append("\n");
+            }
         } else if (qName.equals(TAG_SVG_PATH)) {
             mContent.append("</" + TAG_VECTOR_PATH + ">");
             mContent.append("\n");
@@ -312,7 +321,7 @@ class ParseHandler extends DefaultHandler {
         boolean getFillAlphaAttri = false, getStrokeAlphaAttri = false;
         float fillAlphaValue = 0f, strokeAlphaValue = 0f;
         for (int s = 0; s < subattri.length; s++) {
-            System.out.println(subattri[s]);
+            System.out.println("        " + subattri[s]);
             if (subattri[s].contains(TAG_SVG_PATH_OPACITY)) {
                 fillAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
                 strokeAlphaValue = fillAlphaValue;
