@@ -273,14 +273,22 @@ class ParseHandler extends DefaultHandler {
                 content.append("\n");
             } else if (attributes.getQName(index).equals(TAG_SVG_PATH_FILLALPHA)) {
                 getFillAlphaAttri = true;
-                fillAlphaValue = Float.valueOf(attributes.getValue(index));
+                if (attributes.getValue(index).equals("null")) {
+                    fillAlphaValue = 1.0f;
+                } else {
+                    fillAlphaValue = Float.valueOf(attributes.getValue(index));
+                }
             } else if (attributes.getQName(index).equals(TAG_SVG_PATH_STROKECOLOR)) {
                 content.append(TAG_VECTOR_PATH_STROKECOLOR + "=\""
                         + getStyleSubAttriValue(attributes.getValue(index)) + "\" ");
                 content.append("\n");
             } else if (attributes.getQName(index).equals(TAG_SVG_PATH_STROKEALPHA)) {
                 getStrokeAlphaAttri = true;
-                strokeAlphaValue = Float.valueOf(attributes.getValue(index));
+                if (attributes.getValue(index).equals("null")) {
+                    fillAlphaValue = 1.0f;
+                } else {
+                    strokeAlphaValue = Float.valueOf(attributes.getValue(index));
+                }
             } else if (attributes.getQName(index).equals(TAG_SVG_PATH_STROKEWIDTH)) {
                 content.append(TAG_VECTOR_PATH_STROKEWIDTH + "=\""
                         + getStyleSubAttriValue(attributes.getValue(index)) + "\" ");
@@ -305,7 +313,7 @@ class ParseHandler extends DefaultHandler {
             content.append("\n");
         }
         if (getStrokeAlphaAttri) {
-            content.append(TAG_VECTOR_PATH_FILLALPHA + "=\"" + strokeAlphaValue
+            content.append(TAG_VECTOR_PATH_STROKEALPHA + "=\"" + strokeAlphaValue
                     + "\" ");
             content.append("\n");
         }
@@ -323,7 +331,11 @@ class ParseHandler extends DefaultHandler {
         for (int s = 0; s < subattri.length; s++) {
             System.out.println("        " + subattri[s]);
             if (subattri[s].contains(TAG_SVG_PATH_OPACITY)) {
-                fillAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
+                if (getStyleSubAttriValue(subattri[s]).equals("null")) {
+                    fillAlphaValue = 1.0f;
+                } else {
+                    fillAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
+                }
                 strokeAlphaValue = fillAlphaValue;
                 getFillAlphaAttri = true;
                 getStrokeAlphaAttri = true;
@@ -339,7 +351,11 @@ class ParseHandler extends DefaultHandler {
                 content.append("\n");
             } else if (subattri[s].contains(TAG_SVG_PATH_FILLALPHA)) {
                 getFillAlphaAttri = true;
-                fillAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
+                if (getStyleSubAttriValue(subattri[s]).equals("null")) {
+                    fillAlphaValue = 1.0f;
+                } else {
+                    fillAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
+                }
 //                content.append(TAG_VECTOR_PATH_FILLALPHA + "=\""
 //                        + getStyleSubAttriValue(subattri[s]) + "\" ");
 //                content.append("\n");
@@ -349,7 +365,11 @@ class ParseHandler extends DefaultHandler {
                 content.append("\n");
             } else if (subattri[s].contains(TAG_SVG_PATH_STROKEALPHA)) {
                 getStrokeAlphaAttri = true;
-                strokeAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
+                if (getStyleSubAttriValue(subattri[s]).equals("null")) {
+                    strokeAlphaValue = 1.0f;
+                } else {
+                    strokeAlphaValue = Float.valueOf(getStyleSubAttriValue(subattri[s]));
+                }
 //                content.append(TAG_VECTOR_PATH_STROKEALPHA + "=\""
 //                        + getStyleSubAttriValue(subattri[s]) + "\" ");
 //                content.append("\n");
@@ -377,7 +397,7 @@ class ParseHandler extends DefaultHandler {
             content.append("\n");
         }
         if (getStrokeAlphaAttri) {
-            content.append(TAG_VECTOR_PATH_FILLALPHA + "=\"" + strokeAlphaValue
+            content.append(TAG_VECTOR_PATH_STROKEALPHA + "=\"" + strokeAlphaValue
                     + "\" ");
             content.append("\n");
         }
