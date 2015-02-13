@@ -91,11 +91,29 @@ public class ParseTool {
 }
 
 class ParseHandler extends DefaultHandler {
+    // svg
     public static final String TAG_SVG_HEAD = "svg";
-    public static final String TAG_SVG_GROUNP = "g";
     public static final String TAG_SVG_WIDTH = "width";
     public static final String TAG_SVG_HEIGHT = "height";
     public static final String TAG_SVG_VIEWBOX = "viewBox";
+    //---------------------------------------------------------------- 还没被处理SVG属性
+    public static final String TAG_SVG_NAME = "android:name";
+    public static final String TAG_SVG_TINT = "android:tint";
+    public static final String TAG_SVG_TINTMODE = "android:tintMode";
+    public static final String TAG_SVG_AUTOMIRRORED = "android:autoMirrored";
+    public static final String TAG_SVG_ALPHA = "android:alpha";
+    //---------------------------------------------------------------- 还没被处理SVG属性
+
+    public static final String TAG_SVG_GROUNP = "g";
+    //---------------------------------------------------------------- 还没被处理SVG属性
+    public static final String TAG_SVG_GROUNP_ROTATION = "android:name";
+    public static final String TAG_SVG_GROUNP_PICOTX = "android:rotation";
+    public static final String TAG_SVG_GROUNP_PICOTY = "android:pivotX";
+    public static final String TAG_SVG_GROUNP_SCALEX = "android:pivotY";
+    public static final String TAG_SVG_GROUNP_SCALEy = "android:scaleX";
+    public static final String TAG_SVG_GROUNP_TRANSLATEX = "android:translateX";
+    public static final String TAG_SVG_GROUNP_TRANSLATEY = "android:translateY";
+    //---------------------------------------------------------------- 还没被处理SVG属性
 
     public static final String TAG_SVG_PATH = "path";
     public static final String TAG_SVG_PATHDATA = "d";
@@ -109,15 +127,37 @@ class ParseHandler extends DefaultHandler {
     public static final String TAG_SVG_PATH_STROKEMITERLIMIT = "stroke-miterlimit";
     public static final String TAG_SVG_PATH_STROKELINEJOIN = "stroke-linejoin";
     public static final String TAG_SVG_PATH_STROKELINECAP = "stroke-linecap";
+    //---------------------------------------------------------------- 还没被处理SVG属性
+    public static final String TAG_SVG_PATH_NAME = "android:name";
+    public static final String TAG_SVG_PATH_TRIMPATHOFFSET = "android:trimPathOffset";
+    public static final String TAG_SVG_PATH_TRIMPATHSTART = "android:trimPathStart";
+    public static final String TAG_SVG_PATH_TRIMPATHEND = "android:trimPathEnd";
+    //---------------------------------------------------------------- 还没被处理SVG属性
 
+    // android vector
     public static final String TAG_VECTOR_HEAD = "vector";
-    public static final String TAG_VECTOR_GROUNP = "group";
+    public static final String TAG_VECTOR_NAME = "android:name";
     public static final String TAG_VECTOR_WIDTH = "android:width";
     public static final String TAG_VECTOR_HEIGHT = "android:height";
     public static final String TAG_VECTOR_VIEWPORTWIDTH = "android:viewportWidth";
     public static final String TAG_VECTOR_VIEWPORTHEIGHT = "android:viewportHeight";
+    public static final String TAG_VECTOR_TINT = "android:tint";
+    public static final String TAG_VECTOR_TINTMODE = "android:tintMode";
+    public static final String TAG_VECTOR_AUTOMIRRORED = "android:autoMirrored";
+    public static final String TAG_VECTOR_ALPHA = "android:alpha";
+
+    public static final String TAG_VECTOR_GROUNP = "group";
+    public static final String TAG_VECTOR_GROUNP_NAME = "android:name";
+    public static final String TAG_VECTOR_GROUNP_ROTATION = "android:rotation";
+    public static final String TAG_VECTOR_GROUNP_PICOTX = "android:pivotX";
+    public static final String TAG_VECTOR_GROUNP_PICOTY = "android:pivotY";
+    public static final String TAG_VECTOR_GROUNP_SCALEX = "android:scaleX";
+    public static final String TAG_VECTOR_GROUNP_SCALEy = "android:scaleY";
+    public static final String TAG_VECTOR_GROUNP_TRANSLATEX = "android:translateX";
+    public static final String TAG_VECTOR_GROUNP_TRANSLATEY = "android:translateY";
 
     public static final String TAG_VECTOR_PATH = "path";
+    public static final String TAG_VECTOR_PATH_NAME = "android:name";
     public static final String TAG_VECTOR_PATHDATA = "android:pathData";
     public static final String TAG_VECTOR_PATH_FILLCOLOR = "android:fillColor";
     public static final String TAG_VECTOR_PATH_FILLALPHA = "android:fillAlpha";
@@ -127,6 +167,9 @@ class ParseHandler extends DefaultHandler {
     public static final String TAG_VECTOR_PATH_STROKEMITERLIMIT = "android:strokeMiterLimit";
     public static final String TAG_VECTOR_PATH_STROKELINEJOIN = "android:strokeLineJoin";
     public static final String TAG_VECTOR_PATH_STROKELINECAP = "android:strokeLineCap";
+    public static final String TAG_VECTOR_PATH_TRIMPATHOFFSET = "android:trimPathOffset";
+    public static final String TAG_VECTOR_PATH_TRIMPATHSTART = "android:trimPathStart";
+    public static final String TAG_VECTOR_PATH_TRIMPATHEND = "android:trimPathEnd";
 
     boolean DBG = false;
 
@@ -151,6 +194,7 @@ class ParseHandler extends DefaultHandler {
     public void setFileName(String fileName) {
         mFileName = fileName;
         mDpiScale = MainLoader.mDpiScale;
+        mElementCount = 0;
         if (mContent.length() > 0) {
             mContent.delete(0, mContent.length());
         }
@@ -172,7 +216,7 @@ class ParseHandler extends DefaultHandler {
             Attributes attributes) throws SAXException {
         if(DBG) System.out.println("catch element:" + qName);
         if(DBG) System.out.println("    attributes:");
-        mElementCount++;
+        mElementCount++;//加了记得减
         for (int l = 0; l < attributes.getLength(); l++) {
             if(DBG) {
                 System.out.println("    " + attributes.getQName(l) + "=\""
@@ -211,6 +255,9 @@ class ParseHandler extends DefaultHandler {
         } else if (qName.equals(TAG_SVG_PATH)) {
             contentAppendWithSpace("</" + TAG_VECTOR_PATH + ">");
             contentAppendWithSpace(0,"\n");
+            mElementCount--;
+        } else {
+            // group 里面非path的成员
             mElementCount--;
         }
     }
@@ -453,6 +500,7 @@ class ParseHandler extends DefaultHandler {
 
     void contentAppendWithSpace(int spaceNum, String xml) {
         mContent.append(generateSpaces(spaceNum) + xml);
+//        System.out.println(generateSpaces(spaceNum) + xml);
     }
 
     String generateSpaces(int num) {
