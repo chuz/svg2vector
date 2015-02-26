@@ -13,7 +13,7 @@ public class MainLoader {
     public static boolean DBG = false;
     static final String SYMBOL_f = "-f";
     static final String SYMBOL_s = "-s";
-    static final String SYMBOL_D = "-D";
+    static final String SYMBOL_D = "-d";
     static final String SYMBOL_h = "-h";
     static final String SYMBOL_v = "-v";
 
@@ -33,7 +33,7 @@ public class MainLoader {
     }
 
     ArrayList<String> scanFile() {
-        ArrayList<String> fileList = new ArrayList<>();
+        ArrayList<String> fileList = new ArrayList<String>();
         File file = new File("").getAbsoluteFile();
         String[] dir;
         dir = file.list();
@@ -69,7 +69,7 @@ public class MainLoader {
     void handleArgs(String[] args) {
         boolean get_F = false;
         boolean get_S = false;
-        ArrayList<String> targetFileList = new ArrayList<>();
+        ArrayList<String> targetFileList = new ArrayList<String>();
         for (int index = 0; index < args.length; index++) {
             // System.out.print(args[index]);
             // System.out.print(" ");
@@ -84,7 +84,7 @@ public class MainLoader {
                 } else if (args[index].equals(SYMBOL_D)) {
                     DBG = true;
                     mParseTool.setDBG(DBG);
-                    System.out.println("debug");
+                    System.out.println("Show debug message.");
                     continue;
                 } else if (args[index].equals(SYMBOL_h)) {
                     showHelpMessage();
@@ -117,7 +117,7 @@ public class MainLoader {
         }
         if (targetFileList.size() > 0) {
             for (String file : targetFileList) {
-                mParseTool.parseFile(file);
+                mParseTool.parseFile(extractFileWithoutPath(file));
             }
         } else if (targetFileList.size() == 0) {
             handleDefault();
@@ -158,5 +158,14 @@ public class MainLoader {
              return fileName.endsWith(SVG_SUFFIX);
         }
         return false;
+    }
+
+    String extractFileWithoutPath(String pathname) {
+        File file = new File(pathname);
+        if (file.exists()) {
+            return file.getName();
+        } else {
+            return pathname;
+        }
     }
 }
